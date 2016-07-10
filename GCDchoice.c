@@ -17,28 +17,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "GCD.h"
 
-HANDLE StdInput;
-HANDLE StdOutPut;
+extern HANDLE StdInput;
 int GCD_choice(int argc, char *argv[])
 {
-    StdInput  = GetStdHandle(STD_INPUT_HANDLE);
-    StdOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (1 == argc||strcmp(argv[1], "/?") == 0) {
         printf(
         "GCD choice [[/ck choices] | [/cc choices]] [/t timeout /d choice]\n"
         "GCD choice [/vk virkey] | [/sk]\n\n"
-        "描述:\n    该命令允许用户从选择列表中选择一个选项并返回该选项的索引,或检测一个虚拟按键的状况\n\n"
+        "描述:\n    该命令允许用户从选择列表中选择一个选项并返回该选项的索引,或检测一个虚拟按键\n    的状况\n\n"
         "参数列表:\n    /cc   choices\t指定要创建的字符选项列表\n\n"
         "    /i\t\t\t说明/cc不区分大小写\n\n"
-        "    /ck   choices\t指定要创建的虚拟键码选项列表\n\n"
+        "    /ck   choices\t指定要创建的虚拟键码选项列表(用空格隔开)\n\n"
         "    /t    timeout\t超时毫秒数\n\n"
         "    /d    choice\t超时默认选项,可能是字符或者虚拟键码\n\n"
         "    /vk   virkey\t检测指定的虚拟按键是否被按下,是则返回0,反之返回1\n\n"
-        "    /sk\t\t返回接下来按下的一个按键的虚拟键码\n\n"
+        "    /sk\t\t\t返回接下来按下的一个按键的虚拟键码(首位表示该按键状态\n\t\t\t0-松开 1-按下)\n\n"
         "注意:\n    出现错误时ERRORLEVEL会被设定为 -1\n\n"
         );
     }
     if (stricmp(argv[1], "/vk") == 0) {
+        if (argc < 2) {
+            fprintf(stderr, "ERROR:'/vk'开关需要接收一个参数!\n");
+            return 1;
+        }
         return GCD_choice_checkVK(atoi(argv[2]));
     } else if (stricmp(argv[1], "/sk") == 0) {
         return GCD_choice_showVK();
@@ -51,14 +52,26 @@ int GCD_choice(int argc, char *argv[])
     /*TODO:srticmp太浪费,改成判断字符或许快一点 */
     for (i = 1; i < argc; ++i) {
         if (stricmp(argv[i], "/cc") == 0) {
+            if (!check_argv(argv, argc, i, 1)) {
+                fprintf(stderr, "ERROR:'/cc'开关需要接收一个参数!\n");
+                return 1;
+            }
             list_index = i + 1;
             callFunc   = CALL_WITHCHAR;
             ++i;
         } else if (stricmp(argv[i], "/ck") == 0) {
+            if (!check_argv(argv, argc, i, 1)) {
+                fprintf(stderr, "ERROR:'/ck'开关需要接收一个参数!\n");
+                return 1;
+            }
             list_index = i + 1;
             callFunc   = CALL_WITHVK;
             ++i;
         } else if (stricmp(argv[i], "/d") == 0) {
+            if (!check_argv(argv, argc, i, 1)) {
+                fprintf(stderr, "ERROR:'/d'开关需要接收一个参数!\n");
+                return 1;
+            }
             default_index = i + 1;
             ++i;
         } else if (stricmp(argv[i], "/t") == 0) {
@@ -183,18 +196,6 @@ int GCD_choice_withVK(char *list, int Delay, int Default)
     }
 }
 
-bool chrequ(char c1, char c2)
-{
-    if (c1 == c2) {
-        return true;
-    } else if (c1 >= 65 && c1 <= 90) {
-        return (c1 + 32) == c2;
-    } else if (c2 >= 65 && c2 <= 90){
-        return c1 == (c2 + 32);
-    } else {
-        return false;
-    }
-}
 
 int GCD_choice_checkVK(int VK)
 {
@@ -212,7 +213,9 @@ int GCD_choice_showVK(void)
     for (; ; ) {
         ReadConsoleInput(StdInput, &ir, 1, &Res);
         if (KEY_EVENT == ir.EventType) {
-            return ir.Event.KeyEvent.wVirtualKeyCode;
+            char ret[10];
+            sprintf(ret, "%d%d", ir.Event.KeyEvent.bKeyDown, ir.Event.KeyEvent.wVirtualKeyCode);
+            return atoi(ret);
         }
     }
 }

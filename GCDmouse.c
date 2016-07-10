@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "GCD.h"
 
 bool GCD_Mouse_Exit = FALSE;
-
+extern HANDLE StdInput;
+extern HANDLE StdOutPut;
 int GCD_mouse(int argc, char *argv[])
 {
 
@@ -49,13 +50,17 @@ int GCD_mouse(int argc, char *argv[])
 
     for (i = 1; i < argc; ++i) {
         if (stricmp(argv[i], "/b") == 0) {
-            if (argc > i + 1 - 1 /*&& argv[i + 1][0] != '/'*/) {
+            if (argc > i + 1 - 1 && argv[i + 1][0] != '/') {
                 button = atoi(argv[i + 1]);
                 ++i;
             } else {
                 button = FROM_LEFT_1ST_BUTTON_PRESSED;
             }
         } else if (stricmp(argv[i], "/t") == 0) {
+            if (!check_argv(argv, argc, i, 1)) {
+                fprintf(stderr, "ERROR:'/t'开关需要接收一个参数!\n");
+                return 1;
+            }
             timeout = atoi(argv[i + 1]);
             ++i;
         } else if (stricmp(argv[i], "/c") == 0) {
@@ -68,8 +73,8 @@ int GCD_mouse(int argc, char *argv[])
 
 int GCD_mouse_click(int clickMode, int Delay, bool clip)
 {
-    HANDLE StdInput  = GetStdHandle(STD_INPUT_HANDLE);
-    HANDLE StdOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
+    //HANDLE StdInput  = GetStdHandle(STD_INPUT_HANDLE);
+    //HANDLE StdOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
     HANDLE hDelay;
     
     if (clip) {
@@ -119,7 +124,7 @@ int GCD_mouse_click(int clickMode, int Delay, bool clip)
 
 bool GCD_mouse_goto(int x, int y)
 {
-    HANDLE StdOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
+    //HANDLE StdOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD  curPos    = {x, y};
 
     return SetConsoleCursorPosition(StdOutPut, curPos);
@@ -127,7 +132,7 @@ bool GCD_mouse_goto(int x, int y)
 
 bool GCD_mouse_set(int size, bool visible)
 {
-    HANDLE StdOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
+    //HANDLE StdOutPut = GetStdHandle(STD_OUTPUT_HANDLE);
     
     CONSOLE_CURSOR_INFO cci = {size, visible};
     return SetConsoleCursorInfo(StdOutPut, &cci);

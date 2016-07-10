@@ -20,6 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "miniGdiPlus.h"
 #include <shellapi.h>
 
+#define PathFileExists PathFileExistsA
+
 HWND hCMD;
 
 int GCD_image(int argc, char *argv[], FUNC_IMG_INFO *_fii)
@@ -39,10 +41,9 @@ int GCD_image(int argc, char *argv[], FUNC_IMG_INFO *_fii)
         "GCD image [/f file]\n\n"
         "描述:\n    该命令允许用户在命令行界面打印或清除图片,支持bmp,jpg,png,gif(第一帧)等格式\n\n"
         "参数列表:\n    imgfile\t\t\t需要打印的图片\n\n"
-        "    /c     [x y width height]   清除以x,y为左端点,宽为width,高为height的矩形区域内的图片\n"
-        "\t\t\t\t缺省值为整个窗口\n\n"
+        "    /c     [x y width height]   清除以x,y为左端点,宽为width,高为height的矩形区\n\t\t\t\t域内的图片,缺省值为整个窗口\n\n"
         "    /p     [x y]\t\t将图片打印到指定位置,缺省值为0,0\n\n"
-        "    /tran  [R G B]\t\t将某颜色设为透明色,缺省值为白色.省略该参数则不指定透明色\n\n"
+        "    /tran  [R G B]\t\t将某颜色设为透明色,缺省值为白色.省略该参数则\t\t\t\t\t不指定透明色\n\n"
         "    /alpha\t\t\t显示本身具有透明度的图片\n\n"
         "    /z     width height\t\t指定图片大小.省略该参数则使用图片原宽度和高度\n\n"
         "    /f     file\t\t\t从文件中读取命令执行\n\n"
@@ -54,12 +55,18 @@ int GCD_image(int argc, char *argv[], FUNC_IMG_INFO *_fii)
     } else if (stricmp(argv[1], "/c") == 0) {
         if (argc == 6) {
             return GCD_image_clean(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
-        } else if (argc == 2) {
+        } else {
             return GCD_image_clean(0, 0, 0, 0);
         }
     } else if (stricmp(argv[1], "/f") == 0) {
+        if (argc == 3) {
+            return GCD_image_fromfile(argv[2]);
+        } else {
+            fprintf(stderr, "ERROR:'/f'开关需要接收一个参数!\n");
+            return 1;
+        }
         //puts("->GCD_image_fromfile");
-        return GCD_image_fromfile(argv[2]);
+        
     }
     int i;
 
@@ -73,21 +80,37 @@ int GCD_image(int argc, char *argv[], FUNC_IMG_INFO *_fii)
 
     for (i = 2; i < argc; ++i) {
         if (stricmp(argv[i], "/p") == 0) {
+            if (check_argv(argv, argc, i, 2)) {
                 fii.x = atoi(argv[i + 1]);
                 fii.y = atoi(argv[i + 2]);
                 i += 2;
+            } else {
+                fprintf(stderr, "ERROR:'/p'开关需要接收两个参数!\n");
+                return 1;
+            }
         } else if (stricmp(argv[i], "/tran") == 0) {
             fii.tran = true;
-            if (argc >= i + 3 - 1 && argv[i + 1][0] != '/') {
+            if (check_argv(argv, argc, i, 3)) { //有三个参数
                 fii.clrTran = RGB(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
                 i += 3;
+            } else if (argc == i + 1 || argv[i + 1][0] == '/') { //一个参数都没有? 先判断参数个数,免得argv[i+1]越界
+                fii.clrTran = RGB(255, 255, 255);
+            } else {
+                fprintf(stderr, "ERROR:'/tran'开关需要接收三个参数!\n");
+                return 1;
             }
+
         } else if (stricmp(argv[i], "/alpha") == 0) {
             fii.alpha = true;
         } else if (stricmp(argv[i], "/z") == 0) {
-            fii.width = atoi(argv[i + 1]);
-            fii.height = atoi(argv[i + 2]);
-            i += 2;
+            if (check_argv(argv, argc, i, 2)) {
+                fii.width = atoi(argv[i + 1]);
+                fii.height = atoi(argv[i + 2]);
+                i += 2;
+            } else {
+                fprintf(stderr, "ERROR:'/z'开关需要接收两个参数!\n");
+                return 1;
+            }
         }
     }
     //printf("tran:%d eX:%d eY:%d\n", tran, width, height);
@@ -112,6 +135,10 @@ void GCD_image_show(FUNC_IMG_INFO *fii)
         img.w       = fii->width;
         img.h       = fii->height;
     } else {
+        if (!PathFileExists(fii->imgFile)) {
+            fprintf(stderr, "ERROR:无法打开%s!\n", fii->imgFile);
+            return;
+        }
         wchar_t wImgFile[512] = {0};
         char2wchar(fii->imgFile, wImgFile);
         img = LoadThisImge(wImgFile, fii->width, fii->height);
@@ -131,9 +158,6 @@ void GCD_image_show(FUNC_IMG_INFO *fii)
         BLENDFUNCTION ftn = {AC_SRC_OVER, 0, -1, AC_SRC_ALPHA};
         AlphaBlend(hdcDst, fii->x, fii->y, img.w, img.h, hdcSrc, 0, 0, img.w, img.h, ftn);
     } else {
-        //BITMAP bm;
-        //GetObject(img.hBitmap, sizeof(bm), &bm);
-        //DrawIcon(hdcDst, fii->x, fii->y, bm.bmBits);
         BitBlt(hdcDst, fii->x, fii->y, img.w, img.h, hdcSrc, 0, 0, SRCCOPY);
     }
 
@@ -159,8 +183,8 @@ int GCD_image_fromfile(char *imgFile)
 {
     FILE *fp = fopen(imgFile, "r");
     if (fp == NULL) {
-        fprintf(stderr, "ERROR:无法打开%s\n", imgFile);
-        return -1;
+        fprintf(stderr, "ERROR:无法打开%s!\n", imgFile);
+        return 1;
     }
 
     char cmd[MAX_IMG_COMMAND_LENGTH] = {0};
@@ -189,8 +213,7 @@ int GCD_image_fromfile(char *imgFile)
             GetEnvironmentVariable(varName, varValue, 512);
 
             sscanf(varValue, "%p:%d:%d", &hImgFile, &width, &height);
-            //printf("Get %s=%s\n", varName, varValue);
-            //printf("Get H:%p\n", hImgFile);
+
         } else {
             for (i = 1; i < argc; ++i) {
                 if (stricmp(argv[i], "/v") == 0) {
@@ -205,14 +228,16 @@ int GCD_image_fromfile(char *imgFile)
         }
 
         if (varName_index != 0) { // 存在/v开关,只赋值
-            //int t1 = GetTickCount();
+            if (!PathFileExists(argv[0])) {
+                fprintf(stderr, "ERROR:无法打开%s!\n", argv[0]);
+                return;
+            }
             char2wchar(argv[0], wImgFile);
             IMAGE img = LoadThisImge(wImgFile, width, height);
 
             sprintf(varName,  "$GCD%s", argv[varName_index]);
             sprintf(varValue, "%p:%d:%d", img.hBitmap, img.w, img.h);
-            //printf("H:%p\n", img.hBitmap);
-            //printf("Set %s=%s\n", varName, varValue);
+
             SetEnvironmentVariable(varName, varValue);
         } else {
             //printf("CALL:%d %d\n", hImgFile, varName_index);
@@ -248,14 +273,6 @@ void FreehBitmapFromEnv()
         }
     }
     FreeEnvironmentStrings(env);
-}
-
-
-void char2wchar(char *str, wchar_t *wstr)
-{
-    int slen = strlen(str);
-    int wlen = MultiByteToWideChar(CP_ACP, 0, str, slen, NULL, 0);
-    MultiByteToWideChar(CP_ACP, 0, str, slen, wstr, wlen);
 }
 
 //http://alter.org.ua/docs/win/args/

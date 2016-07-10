@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <wchar.h>
+//#include <Shlwapi.h>
 
 #define MAX_VK_COUNT 128
 #define MAX_TITLE_LENGTH 256
@@ -89,8 +90,13 @@ void FreehBitmapFromEnv(void);
 int GCD_text(int, char **);
 void GCD_text_show(FUNC_TEXT_INFO *);
 
+int GCD_syba(int, char **);
+void GCD_syba_core(char *);
+
 void char2wchar(char *, wchar_t *);
-void wchar2char(wchar_t *, char);
+//void wchar2char(wchar_t *, char);
+bool check_argv(char **, int, int, int);
+bool chrequ(char, char);
 
 void GCD_delay_1(void *);
 void GCD_delay_2(void *);

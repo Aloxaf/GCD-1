@@ -66,24 +66,48 @@ int GCD_text(int argc, char *argv[])
 
     for (i = 2; i < argc; ++i) {
         if (stricmp(argv[i], "/p") == 0) {
+            if (!check_argv(argv, argc, i, 2)) {
+                fprintf(stderr, "ERROR:'/p'开关需要接收两个参数!\n");
+                return 1;
+            }
             fti.x = atoi(argv[i + 1]);
             fti.y = atoi(argv[i + 2]);
             i += 2;
         } else if (stricmp(argv[i], "/z") == 0) {
+            if (!check_argv(argv, argc, i, 2)) {
+                fprintf(stderr, "ERROR:'/z'开个需要接收两个参数!\n");
+                return 1;
+            }
             fti.width  = atoi(argv[i + 1]);
             fti.height = atoi(argv[i + 2]);
             i += 2;
         } else if (stricmp(argv[i], "/b") == 0) {
+            if (!check_argv(argv, argc, i, 1)) {
+                fprintf(stderr, "ERROR:'/b'开关需要接收一个参数!\n");
+                return 1;
+            }
             fti.weight = atoi(argv[i + 1]);
             i += 1;
         } else if (stricmp(argv[i], "/f") == 0) {
+            if (!check_argv(argv, argc, i, 1)) {
+                fprintf(stderr, "ERROR:'/f'开关需要接收一个参数!\n");
+                return 1;
+            }
             fti.front = argv[i + 1];
             //strcpy(front, argv[i + 1]);
             i += 1;
         } else if (stricmp(argv[i], "/fc") == 0) {
+            if (!check_argv(argv, argc, i, 3)) {
+                fprintf(stderr, "ERROR:'/fc'开关需要接收三个参数!\n");
+                return 1;
+            }
             fti.clrFr = RGB(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
             i += 3;
         } else if (stricmp(argv[i], "/bc") == 0) {
+            if (!check_argv(argv, argc, i, 3)) {
+                fprintf(stderr, "ERROR:'/bc'开关需要接收三个参数!\n");
+                return 1;
+            }
             fti.bktran = false;
             fti.clrBk  = RGB(atoi(argv[i + 1]), atoi(argv[i + 2]), atoi(argv[i + 3]));
             i += 3;
@@ -94,6 +118,10 @@ int GCD_text(int argc, char *argv[])
         } else if (stricmp(argv[i], "/s") == 0) {
             fti.strikeout = true;
         } else if (stricmp(argv[i], "/r") == 0) {
+            if (!check_argv(argv, argc, i, 4)) {
+                fprintf(stderr, "ERROR:'/r'开关需要接收四个参数!\n");
+                return 1;
+            }
             fti.DrawText  = true;
             fti.rc.left   = atoi(argv[i + 1]);
             fti.rc.top    = atoi(argv[i + 2]);
@@ -112,6 +140,9 @@ int GCD_text(int argc, char *argv[])
                     }
                 }
             }
+        } else {
+            fprintf(stderr, "ERROR:未知开关'%s'!\n", argv[i]);
+            return 1;
         }
     }
 
@@ -151,3 +182,4 @@ void GCD_text_show(FUNC_TEXT_INFO *fti)
     SelectObject(hdcDst, hFontOld);
     ReleaseDC(hCMD, hdcDst);
 }
+
