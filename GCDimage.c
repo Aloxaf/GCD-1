@@ -48,8 +48,9 @@ int GCD_image(int argc, char *argv[], FUNC_IMG_INFO *_fii)
         "    /z     width height\t\t指定图片大小.省略该参数则使用图片原宽度和高度\n\n"
         "    /f     file\t\t\t从文件中读取命令执行\n\n"
         "注意:\n    1./tran与/alpha不兼容\n\n"
-        "    2./f模式启用新的开关/v var, 该开关会将图片的句柄复制到变量var.\n\n"
-        "      然后可以通过$var的方式来引用图片.(该开关只能与/z开关同时使用)\n\n"
+        "    2./f模式启用新的开关/v var, 该开关会将图片的句柄复制到变量var.\n"
+        "      然后可以通过$var的方式来引用图片.(该方式只能与/z开关同时使用,\n"
+        "      使用其他开关需要在加载图片时指定)\n\n"
         );
         return 0;
     } else if (stricmp(argv[1], "/c") == 0) {
@@ -195,7 +196,7 @@ int GCD_image_fromfile(char *imgFile)
     GetClientRect(hCMD, &rc);
 
     HDC  hdcCMD = GetDC(hCMD);
-    HDC  hdcMem = CreateCompatibleDC(hdcCMD);
+    HDC  hdcMem = CreateCompatibleDC(hdcCMD); //创建内存画布
     HBITMAP  hdcBMP = CreateCompatibleBitmap(hdcCMD, rc.right, rc.bottom);
     SelectObject(hdcMem, hdcBMP);
     while (!feof(fp)) {
