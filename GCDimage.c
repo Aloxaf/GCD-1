@@ -43,7 +43,7 @@ int GCD_image(int argc, char *argv[], FUNC_IMG_INFO *_fii)
         "参数列表:\n    imgfile\t\t\t需要打印的图片\n\n"
         "    /c     [x y width height]   清除以x,y为左端点,宽为width,高为height的矩形区\n\t\t\t\t域内的图片,缺省值为整个窗口\n\n"
         "    /p     [x y]\t\t将图片打印到指定位置,缺省值为0,0\n\n"
-        "    /tran  [R G B]\t\t将某颜色设为透明色,缺省值为白色.省略该参数则\t\t\t\t\t不指定透明色\n\n"
+        "    /tran  [R G B]\t\t将某颜色设为透明色,缺省值为白色.省略该参数则\n\t\t\t\t不指定透明色\n\n"
         "    /alpha\t\t\t显示本身具有透明度的图片\n\n"
         "    /z     width height\t\t指定图片大小.省略该参数则使用图片原宽度和高度\n\n"
         "    /f     file\t\t\t从文件中读取命令执行\n\n"
