@@ -28,10 +28,12 @@ int GCD_syba(int argc, char *argv[])
         "参数列表:\n    cmd\t\t\tsyba命令\n\n"
         "    /v   var1 var2 ...  从变量中读取命令执行\n\n"
         "syba命令格式:\n"
-        "    :xxxxxx \t\t坐标,前三位为X,后三位为Y\n"
-        "    $xx\t\t\t指定颜色\n"
-        "    ;\t\t\t换行\n"
+        "    :xxxxxx \t\t坐标,前三位为X,后三位为Y\n\n"
+        "    $xx\t\t\t指定颜色\n\n"
+        "    ;\t\t\t换行\n\n"
         "    #\t\t\t不输出字符,只改变当前位置的字符的颜色\n\n"
+        "    `\t\t\t转义符\n\n"
+        "    ```\t\t\t将后面所有的内容当作普通字符\n\n"
         );
     } else if (stricmp(argv[1], "/v") == 0) {
         for (i = 2; i < argc; ++i) {
